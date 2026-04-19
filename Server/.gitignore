@@ -1,27 +1,32 @@
-# Ignore node_modules
+# Node modules
 node_modules/
 
-# Ignore environment variables
+# Environment variables
 .env
 
-# Ignore build files
+# Build files
 dist/
 out/
 build/
 
-# Ignore logs
-npm-debug.log
-yarn-debug.log
-yarn-error.log
-pnpm-debug.log
+# Logs
+*.log
 
-# Ignore dependency lock files (optional)
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
+# Jenkins
+jenkins/organizeme-build/builds/
+jenkins_home/
 
-# Ignore VS Code settings
+# Docker
+*.tar
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+
+# VS Code
 .vscode/
 
-# Ignore macOS system files
+# OS files
 .DS_Store
+Thumbs.db
