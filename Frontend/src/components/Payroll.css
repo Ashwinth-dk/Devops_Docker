@@ -1,0 +1,91 @@
+/* Payroll.css */
+
+.payroll-container {
+  width: 90%; /* Full width within the page */
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  font-family: Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 600px; /* Set minimum height to make it look balanced */
+}
+
+.payroll-container h2 {
+  text-align: center;
+  margin-bottom: 15px;
+  color: #343a40;
+}
+
+.employee-select {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 25px;
+  justify-content: center;
+  width: 100%;
+}
+
+.employee-select label {
+  font-weight: 500;
+  font-size: 16px;
+}
+
+.employee-select select {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #ced4da;
+  font-size: 15px;
+  width: 200px;
+}
+
+.payroll-summary {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.payroll-summary p {
+  font-size: 18px;
+  font-weight: 500;
+  margin: 10px;
+}
+
+.attendance-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.attendance-table th,
+.attendance-table td {
+  border: 1px solid #dee2e6;
+  padding: 10px 12px;
+  text-align: center;
+}
+
+.attendance-table th {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.attendance-table tr:nth-child(even) {
+  background-color: #f1f3f5;
+}
+
+.attendance-table tr:hover {
+  background-color: #e9ecef;
+}
+
+.no-attendance {
+  text-align: center;
+  font-style: italic;
+  color: #6c757d;
+  margin-top: 20px;
+}

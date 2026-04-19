@@ -1,0 +1,7 @@
+workflow-aggregator
+git
+docker-workflow
+workflow-cps
+workflow-job
+credentials
+plain-credentials

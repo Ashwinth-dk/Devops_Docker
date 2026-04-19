@@ -1,0 +1,57 @@
+# Development Override for Docker Compose
+# 
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+#
+# This file provides development-specific configurations with hot reload and debugging
+
+version: '3.8'
+
+services:
+  backend:
+    # Mount the entire Server directory for hot reload
+    volumes:
+      - ./Server:/app/Server
+      - /app/Server/node_modules
+      - /app/Server/.npm:/.npm
+    environment:
+      NODE_ENV: development
+      DEBUG: 'organizeMe:*'
+    command: npm start  # Uses nodemon from package.json
+    ports:
+      - "5000:5000"
+      - "9229:9229"  # Node debugger port
+    stdin_open: true
+    tty: true
+
+  frontend:
+    # Mount source directory for hot reload
+    volumes:
+      - ./Frontend/src:/app/src
+      - ./Frontend/public:/app/public
+      - ./Frontend/package.json:/app/package.json
+      - /app/node_modules
+    environment:
+      VITE_API_URL: http://localhost:5000
+      NODE_ENV: development
+    command: npm run dev
+    ports:
+      - "3000:5173"
+      - "24678:24678"  # Vite HMR port
+
+  postgres:
+    # Development uses minimal resources
+    environment:
+      POSTGRES_INITDB_ARGS: "-c shared_buffers=128MB -c max_connections=100"
+    command:
+      - "postgres"
+      - "-c"
+      - "log_statement=all"
+      - "-c"
+      - "log_duration=on"
+      - "-c"
+      - "log_min_duration_statement=0"
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M

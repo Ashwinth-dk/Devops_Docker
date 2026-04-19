@@ -1,0 +1,135 @@
+name: Docker Build & Test
+
+on:
+  push:
+    branches: [ main, development ]
+  pull_request:
+    branches: [ main, development ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: admin
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_DB: organizeme_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Create .env file
+        run: cp .env.example .env
+
+      - name: Update .env for testing
+        run: |
+          sed -i 's/DB_HOST=.*/DB_HOST=postgres/' .env
+          sed -i 's/DB_PASSWORD=.*/DB_PASSWORD=testpassword/' .env
+          sed -i 's/NODE_ENV=.*/NODE_ENV=test/' .env
+
+      - name: Build Backend Docker image
+        run: docker build -f Dockerfile -t organizeme-backend:test .
+
+      - name: Build Frontend Docker image
+        run: docker build -f Frontend/Dockerfile -t organizeme-frontend:test ./Frontend
+
+      - name: Run Backend tests
+        continue-on-error: true
+        run: |
+          docker run --rm \
+            --network host \
+            -e NODE_ENV=test \
+            -e DB_HOST=localhost \
+            -e DB_USER=admin \
+            -e DB_PASSWORD=testpassword \
+            -e DB_NAME=organizeme_test \
+            organizeme-backend:test npm test
+
+      - name: Docker image scan (Backend)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: organizeme-backend:test
+          format: 'sarif'
+          output: 'backend-trivy-results.sarif'
+        continue-on-error: true
+
+      - name: Upload Trivy results to GitHub Security tab (Backend)
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'backend-trivy-results.sarif'
+        continue-on-error: true
+
+      - name: Docker image scan (Frontend)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: organizeme-frontend:test
+          format: 'sarif'
+          output: 'frontend-trivy-results.sarif'
+        continue-on-error: true
+
+  docker-compose-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Create .env file
+        run: cp .env.example .env
+
+      - name: Test Docker Compose
+        run: |
+          docker-compose build
+          docker-compose up -d
+          sleep 10
+          docker-compose ps
+          docker-compose logs
+
+      - name: Health check
+        run: |
+          timeout 60 bash -c 'until curl -f http://localhost:5000 || [ $? -eq 28 ]; do sleep 1; done' || true
+          docker-compose ps
+
+      - name: Cleanup
+        if: always()
+        run: docker-compose down -v
+
+  security-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+        continue-on-error: true
+
+      - name: Upload Trivy results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+        continue-on-error: true
