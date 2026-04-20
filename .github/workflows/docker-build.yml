@@ -97,20 +97,20 @@ jobs:
 
       - name: Test Docker Compose
         run: |
-          docker-compose build
-          docker-compose up -d
+          docker compose build
+          docker compose up -d
           sleep 10
-          docker-compose ps
-          docker-compose logs
+          docker compose ps
+          docker compose logs
 
       - name: Health check
         run: |
           timeout 60 bash -c 'until curl -f http://localhost:5000 || [ $? -eq 28 ]; do sleep 1; done' || true
-          docker-compose ps
+          docker compose ps
 
       - name: Cleanup
         if: always()
-        run: docker-compose down -v
+        run: docker compose down -v
 
   security-scan:
     runs-on: ubuntu-latest
