@@ -1,15 +1,63 @@
 <?xml version='1.1' encoding='UTF-8'?>
-<project>
+<flow-definition plugin="workflow-job@2.40">
+  <actions/>
+  <description>Pipeline for building OrganizeMe application</description>
   <keepDependencies>false</keepDependencies>
   <properties/>
-  <scm class="hudson.scm.NullSCM"/>
-  <canRoam>false</canRoam>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.92">
+    <script>pipeline {
+    agent any
+
+    environment {
+        DOCKER_COMPOSE_FILE = 'docker-compose.yml'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/Ashwinth-dk/Devops_Docker.git'
+            }
+        }
+
+        stage('Build Backend') {
+            steps {
+                sh 'docker build -t organizeme-backend:test ./Server'
+            }
+        }
+
+        stage('Build Frontend') {
+            steps {
+                sh 'docker build -t organizeme-frontend:test ./Frontend'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh 'docker compose -f $DOCKER_COMPOSE_FILE up -d postgres'
+                sh 'sleep 30'
+                sh 'docker compose -f $DOCKER_COMPOSE_FILE run --rm backend npm test || true'
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                sh 'docker compose -f $DOCKER_COMPOSE_FILE up -d --build'
+            }
+        }
+    }
+
+    post {
+        always {
+            sh 'docker compose -f $DOCKER_COMPOSE_FILE down'
+        }
+    }
+}</script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers>
+    <com.cloudbees.jenkins.GitHubPushTrigger plugin="github@1.37.3">
+      <spec></spec>
+    </com.cloudbees.jenkins.GitHubPushTrigger>
+  </triggers>
   <disabled>false</disabled>
-  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
-  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
-  <triggers/>
-  <concurrentBuild>false</concurrentBuild>
-  <builders/>
-  <publishers/>
-  <buildWrappers/>
-</project>
+</flow-definition>

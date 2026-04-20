@@ -5,3 +5,4 @@ workflow-cps
 workflow-job
 credentials
 plain-credentials
+github
