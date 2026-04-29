@@ -14,9 +14,12 @@
   import http from "http";
   import { Server } from "socket.io";
   import dotenv from "dotenv";
+  import { collectDefaultMetrics, register } from "prom-client";
   dotenv.config();
 
   const app = express();
+
+  collectDefaultMetrics({ timeout: 5000 });
 
   // Middleware setup
   app.use(
@@ -33,6 +36,16 @@
   // Root route
   app.get("/", (req, res) => {
     res.json({ Status: true, message: "Server is running" });
+  });
+
+  // Metrics endpoint for Prometheus
+  app.get("/metrics", async (req, res) => {
+    try {
+      res.set("Content-Type", register.contentType);
+      res.end(await register.metrics());
+    } catch (err) {
+      res.status(500).send(err.message);
+    }
   });
 
   // Middleware to verify user authentication
@@ -104,6 +117,6 @@
 
   // Start server on port
   const port = process.env.PORT || 3000;
-  server.listen(port, () => {
+  server.listen(port, '0.0.0.0', () => {
     console.log(`Server is running on port ${port}`);
   });

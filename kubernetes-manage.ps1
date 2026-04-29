@@ -15,8 +15,8 @@ $kubeDir = "kubernetes"
 
 function Build-Images {
     Write-Host "Building Docker images..." -ForegroundColor Green
-    docker build -t organizeme-backend:latest -f Dockerfile .
-    docker build -t organizeme-frontend:latest -f Frontend/Dockerfile ./Frontend
+    docker build -t organizeme-backend:local -f Dockerfile .
+    docker build -t organizeme-frontend:local -f Frontend/Dockerfile ./Frontend
     Write-Host "Images built successfully!" -ForegroundColor Green
 }
 
@@ -46,6 +46,15 @@ function Deploy {
     kubectl apply -f $kubeDir/jenkins-deployment.yaml
     Start-Sleep -Seconds 3
     
+    Write-Host "6. Creating Prometheus and Grafana..." -ForegroundColor Cyan
+    kubectl apply -f $kubeDir/prometheus-configmap.yaml
+    kubectl apply -f $kubeDir/prometheus-deployment.yaml
+    kubectl apply -f $kubeDir/grafana-configmap.yaml
+    kubectl apply -f $kubeDir/grafana-dashboard-provider.yaml
+    kubectl apply -f $kubeDir/grafana-dashboards.yaml
+    kubectl apply -f $kubeDir/grafana-deployment.yaml
+    Start-Sleep -Seconds 3
+    
     Write-Host "Deployment complete!" -ForegroundColor Green
     kubectl get all -n $kubeNamespace
 }
@@ -69,9 +78,15 @@ function View-Logs {
         Write-Host "Viewing logs for all services..." -ForegroundColor Green
         kubectl logs -n $kubeNamespace -l app=backend --tail=50
         kubectl logs -n $kubeNamespace -l app=frontend --tail=50
+        kubectl logs -n $kubeNamespace -l app=prometheus --tail=50
+        kubectl logs -n $kubeNamespace -l app=grafana --tail=50
     } else {
         Write-Host "Viewing logs for $service..." -ForegroundColor Green
-        kubectl logs -n $kubeNamespace -l app=$service -f --all-containers=true
+        switch ($service) {
+            "prometheus" { kubectl logs -n $kubeNamespace -l app=prometheus -f --all-containers=true }
+            "grafana" { kubectl logs -n $kubeNamespace -l app=grafana -f --all-containers=true }
+            default { kubectl logs -n $kubeNamespace -l app=$service -f --all-containers=true }
+        }
     }
 }
 
@@ -96,6 +111,12 @@ function Setup-PortForward {
     Write-Host ""
     Write-Host "Jenkins (8080):" -ForegroundColor Cyan
     Write-Host "kubectl port-forward -n $kubeNamespace svc/jenkins-service 8080:8080" -ForegroundColor Green
+    Write-Host ""
+    Write-Host "Prometheus (9090):" -ForegroundColor Cyan
+    Write-Host "kubectl port-forward -n $kubeNamespace svc/prometheus-service 9090:9090" -ForegroundColor Green
+    Write-Host ""
+    Write-Host "Grafana (3001):" -ForegroundColor Cyan
+    Write-Host "kubectl port-forward -n $kubeNamespace svc/grafana-service 3001:3000" -ForegroundColor Green
     Write-Host ""
     Write-Host "PostgreSQL (5432):" -ForegroundColor Cyan
     Write-Host "kubectl port-forward -n $kubeNamespace svc/postgres-service 5432:5432" -ForegroundColor Green

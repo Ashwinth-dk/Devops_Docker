@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: organizeme
+data:
+  organizeme-dashboard.json: |
+    {
+      "id": null,
+      "uid": "organizeme-monitor",
+      "title": "OrganizeMe Monitoring",
+      "tags": ["organizeme", "prometheus"],
+      "timezone": "browser",
+      "schemaVersion": 36,
+      "version": 0,
+      "refresh": "30s",
+      "panels": [
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": { "defaults": {}, "overrides": [] },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+          "id": 1,
+          "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "single" } },
+          "targets": [ { "expr": "up{job=\"backend\"}", "refId": "A" } ],
+          "title": "Backend Up",
+          "type": "timeseries"
+        },
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": { "defaults": {}, "overrides": [] },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+          "id": 2,
+          "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "single" } },
+          "targets": [ { "expr": "up{job=\"frontend\"}", "refId": "A" } ],
+          "title": "Frontend Up",
+          "type": "timeseries"
+        }
+      ],
+      "time": { "from": "now-1h", "to": "now" },
+      "timepicker": { "refresh_intervals": ["5s", "10s", "30s", "1m", "5m", "10m"], "time_options": ["1m", "5m", "15m", "1h", "6h", "12h", "24h", "2d", "7d", "30d"] }
+    }
