@@ -1,5 +1,6 @@
 import express from "express";
 import supabase from "../utils/supabaseClient.js";
+import { projectCount } from "../index.js";
 
 const router = express.Router();
 
@@ -34,6 +35,7 @@ router.get("/", async (req, res) => {
 
     if (error) throw error;
 
+    projectCount.set(projects.length);
     res.status(200).json({ success: true, projects });
   } catch (error) {
     console.error("Error fetching projects:", error);

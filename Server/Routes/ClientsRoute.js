@@ -1,5 +1,6 @@
 import express from "express";
 import supabase from "../utils/supabaseClient.js";
+import { clientCount } from "../index.js";
 
 const router = express.Router();
 
@@ -13,6 +14,7 @@ router.get("/", async (req, res) => {
 
     if (error) throw error;
 
+    clientCount.set(clients.length);
     res.status(200).json({ success: true, clients });
   } catch (error) {
     console.error("Error fetching clients:", error);

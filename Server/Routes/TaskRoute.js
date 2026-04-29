@@ -1,6 +1,6 @@
 import express from "express";
 import supabase from "../utils/supabaseClient.js";
-import { io } from "../index.js";
+import { io, taskCount } from "../index.js";
 
 const router = express.Router();
 
@@ -174,6 +174,7 @@ router.get("/", async (req, res) => {
       ...assignmentsByTask[task.task_id],
     }));
 
+    taskCount.set(tasks.length);
     res.json({ success: true, tasks: finalTasks });
   } catch (error) {
     console.error("Error fetching tasks:", error);

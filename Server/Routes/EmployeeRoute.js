@@ -2,6 +2,7 @@ import express from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import supabase from "../utils/supabaseClient.js"; // your supabaseClient.js
+import { employeeCount } from "../index.js";
 
 const router = express.Router();
 
@@ -258,6 +259,7 @@ router.get("/employee/list", async (req, res) => {
     const { data, error } = await supabase.from("employee").select("id, name, role");
     if (error) throw error;
 
+    employeeCount.set(data.length);
     res.status(200).json({ success: true, employees: data });
   } catch (error) {
     console.error("Error fetching employees:", error);

@@ -14,39 +14,28 @@
   import http from "http";
   import { Server } from "socket.io";
   import dotenv from "dotenv";
-  import { collectDefaultMetrics, register } from "prom-client";
-  dotenv.config();
+import { collectDefaultMetrics, register, Gauge } from "prom-client";
+dotenv.config();
 
-  const app = express();
+const app = express();
 
-  collectDefaultMetrics({ timeout: 5000 });
+collectDefaultMetrics({ timeout: 5000 });
 
-  // Middleware setup
-  app.use(
-    cors({
-      origin: [process.env.CLIENT_URL || "http://localhost:5173" || "https://organizemee.vercel.app"], // Use env variable for production URL
-      methods: ["GET", "POST", "PUT", "DELETE"],
-      credentials: true,
-    })
-  );
-  app.use(express.json());
-  app.use(cookieParser());
-  app.use(express.static("Public"));
+// Custom metrics
+export const employeeCount = new Gauge({ name: 'organizeme_employee_count', help: 'Total number of employees' });
+export const projectCount = new Gauge({ name: 'organizeme_project_count', help: 'Total number of projects' });
+export const clientCount = new Gauge({ name: 'organizeme_client_count', help: 'Total number of clients' });
+export const taskCount = new Gauge({ name: 'organizeme_task_count', help: 'Total number of tasks' });
 
-  // Root route
-  app.get("/", (req, res) => {
-    res.json({ Status: true, message: "Server is running" });
-  });
-
-  // Metrics endpoint for Prometheus
-  app.get("/metrics", async (req, res) => {
-    try {
-      res.set("Content-Type", register.contentType);
-      res.end(await register.metrics());
-    } catch (err) {
-      res.status(500).send(err.message);
-    }
-  });
+// Metrics endpoint for Prometheus
+app.get("/metrics", async (req, res) => {
+  try {
+    res.set("Content-Type", register.contentType);
+    res.end(await register.metrics());
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
 
   // Middleware to verify user authentication
   const verifyUser = (req, res, next) => {
